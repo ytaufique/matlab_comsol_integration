@@ -1,0 +1,74 @@
+{
+  "gamma": {
+    "value": "0.05[N/m]",
+    "description": ""
+  },
+  "mu": {
+    "value": "100[mPa*s]",
+    "description": ""
+  },
+  "h0": {
+    "value": "200e-6[m]",
+    "description": ""
+  },
+  "U": {
+    "value": "0.004635[m/s]",
+    "description": ""
+  },
+  "rho": {
+    "value": "1000[kg/m^3]",
+    "description": ""
+  },
+  "g": {
+    "value": "10[m/s^2]",
+    "description": ""
+  },
+  "AA": {
+    "value": "5e-7[m]",
+    "description": ""
+  },
+  "h_star": {
+    "value": "10e-9[m]",
+    "description": ""
+  },
+  "nn": {
+    "value": "4",
+    "description": ""
+  },
+  "mm": {
+    "value": "3",
+    "description": ""
+  },
+  "theta": {
+    "value": "2[deg]",
+    "description": ""
+  },
+  "alpha": {
+    "value": "90[deg]",
+    "description": ""
+  },
+  "currentiter": {
+    "value": "0",
+    "description": ""
+  },
+  "offset": {
+    "value": "0.002587959307432[m]",
+    "description": ""
+  },
+  "Lc": {
+    "value": "sqrt(gamma/(rho*g))",
+    "description": ""
+  },
+  "H": {
+    "value": "2*cos((theta + alpha) / 2)",
+    "description": ""
+  },
+  "x_man": {
+    "value": "H*Lc-offset",
+    "description": ""
+  },
+  "Ca": {
+    "value": "(mu*U)/gamma",
+    "description": ""
+  }
+}

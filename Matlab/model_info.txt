@@ -1,0 +1,110 @@
+COMSOL MODEL EXPORT
+05-Jun-2026 17:17:09
+============================================================
+
+PARAMETERS
+============================================================
+  gamma                     = 0.05[N/m]                  
+  mu                        = 100[mPa*s]                 
+  h0                        = 200e-6[m]                  
+  U                         = 0.004635[m/s]              
+  rho                       = 1000[kg/m^3]               
+  g                         = 10[m/s^2]                  
+  AA                        = 5e-7[m]                    
+  h_star                    = 10e-9[m]                   
+  nn                        = 4                          
+  mm                        = 3                          
+  theta                     = 2[deg]                     
+  alpha                     = 90[deg]                    
+  currentiter               = 0                          
+  offset                    = 0.002587959307432[m]       
+  Lc                        = sqrt(gamma/(rho*g))        
+  H                         = 2*cos((theta + alpha) / 2)  
+  x_man                     = H*Lc-offset                
+  Ca                        = (mu*U)/gamma               
+
+VARIABLES
+============================================================
+  Group: var1
+    h_ini                     = h0*exp(-(15/eta)*x) + 1.5*h_star +0*0.946*Lc*Ca^(2/3)  
+    p_res                     = -sqrt(2*rho*gamma*g*(1-cos(alpha-theta)))  
+    eta                       = sqrt(gamma/(rho*g))             
+    h_ini_move                = h0*exp(-(20/eta)*(x-1e-3[m])) + 0.946*Lc*Ca^(2/3)  
+    X_big                     = log((2+sqrt(4-F^2))/F)-log((2+sqrt(4-H^2))/H)-sqrt(4-F^2)+sqrt(4-H^2)  
+    F                         = x/Lc                            
+  Group: var2
+    Pi                        = gamma*(1-cos(theta))*(nn-1)*(mm-1)/(h_star *(nn-mm))*((h_star/hh)^nn-(h_star/hh)^mm)  
+
+FUNCTIONS
+============================================================
+  an1                   label: initial_profile
+  an2                   label: initial_profile 1
+  pw1                   label: linear
+  pw2                   label: exponential
+  int1                  label: initial_condition
+
+MATERIALS
+============================================================
+
+GEOMETRY
+============================================================
+  tag: geom1
+
+MESH
+============================================================
+  tag: mesh1
+    meshtag                   = mesh1
+    buildcomsolversion        = COMSOL 6.3.0.420 (win64)
+    buildDate                 = 2025-11-10T00:50:17.824273100
+    buildTime                 = 0
+    geomtag                   = geom1
+    geometricmodel            = geom/geom1
+    component                 = comp1
+    componentgeometricmodel   = geom/geom1
+    current                   = size2
+    sdim                      = 1
+    numelem                   = [10437 3]
+    qualitymeasure            = skewness
+    minquality                = 1
+    meanquality               = 1
+    qualitydistr              = [0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;10437]
+    minvolume                 = 1e-07
+    maxvolume                 = 1.002e-05
+    volume                    = 0.001556
+    maxgrowthrate             = 1.351
+    meangrowthrate            = 1
+
+PHYSICS
+============================================================
+
+  [g]  General Form PDE
+    Feature: gfeq1                 (General Form PDE 1)
+      f          = pp - rho*g*x
+      f         [1] = pp - rho*g*x
+      f         [2] = 0
+      Ga         = -gamma*hhx
+      Ga        [1] = -gamma*hhx
+      Ga        [2] = -hh^3*ppx/(3*mu) + U*hh
+      ea         = 0
+      ea        [1] = 0
+      da         = 0
+      da        [1] = 0
+      da        [2] = 1
+      da        [3] = 0
+      da        [4] = 0
+    Feature: zflx1                 (Zero Flux 1)
+    Feature: init1                 (Initial Values 1)
+    Feature: dcont1                (Continuity 1)
+    Feature: dir1                  (Dirichlet Boundary Condition 1)
+      r          = h0
+      r         [1] = h0
+      r         [2] = p_res
+    Feature: flux1                 (Flux/Source 1)
+      g          = gamma*hhx
+      g         [1] = gamma*hhx
+      g         [2] = hh^3*rho*g/(3*mu)-U*hh
+
+STUDIES
+============================================================
+  std1                  label: Study 1
+    time                  Time Dependent

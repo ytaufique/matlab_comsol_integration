@@ -1,0 +1,9 @@
+# COMSOL model files (too large for GitHub)
+*.mph
+*.mph.lock
+
+# Claude Code settings
+.claude/
+
+# All result files
+Results/

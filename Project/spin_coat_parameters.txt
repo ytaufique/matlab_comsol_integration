@@ -1,0 +1,7 @@
+rot 4000[rpm] ""
+w "rot * 2 * pi [rad]" ""
+rho "1000 [kg / m ^3]" ""
+eta 1[mPa*s] ""
+gamma .050[N/m] ""
+K rho*w^2/3*eta ""
+h_0 50e-6 ""

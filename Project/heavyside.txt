@@ -1,0 +1,6 @@
+x_prime x-offset ""
+s "A  * ( flc2hs(x_prime,epsilon))" ""
+ds A*(0.9375/epsilon-3*0.625*x_prime^2/epsilon^3+5*0.1875*x_prime^4/epsilon^5) ""
+epsilon 2e-4 ""
+A 1e-6 ""
+offset 1e-2 ""
