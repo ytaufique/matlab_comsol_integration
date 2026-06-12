@@ -1,0 +1,79 @@
+spin_coat_stillwagon_topography_solvent_evaporation.mph
+09-Jun-2026 11:01:56
+============================================================
+
+PARAMETERS
+============================================================
+  rot                       = 2000[rpm]                       
+  w                         = rot * 2 * pi [rad]              
+  rho                       = 1000 [kg / m ^3]                
+  h_0                       = 50e-6                           
+  A                         = 1e-6[m]                         
+  offset                    = 90e-3                           
+  epsilon                   = 5.4e-6                          
+  gamma                     = 0.04[N/m]                       
+  Fo                        = 10e-8[m/s]                      
+  c_max                     = .99                             
+  D                         = 10e-10 [m^2/s]                  
+  tau                       = 0                               
+
+VARIABLES
+============================================================
+  Group: var1
+    s                         = A  * ( flc2hs(x_prime,epsilon))      
+    x_prime                   = x-offset                             
+    b                         = 1[Pa*s]                              
+
+GEOMETRY
+============================================================
+  tag: geom1       sdim: 1
+
+MESH
+============================================================
+  tag: mesh1  sdim=1  nelems=[4000 4]
+
+PHYSICS
+============================================================
+
+  [g]  General Form PDE
+    Feature: gfeq1                      (General Form PDE 1)
+      f         [1] = P * x
+      f         [2] = -F(c)*3*x * eta(c)
+      f         [3] = c* F(c) -(hh^2 * tau / (2 * eta(c)))* c  - (hh^3 * Px /(3*eta(c)))* c
+      f             = P * x
+      Ga        [1] = - gamma * (hhx+ds(x)) * x
+      Ga        [2] = - hh^3*Px * x+ hh^3*rho*w^2*x^2
+      Ga        [3] = -D*hh*cx
+      Ga            = - gamma * (hhx+ds(x)) * x
+      ea        [1] = 0
+      ea            = 0
+      da        [1] = 0
+      da        [2] = 3*x*eta(c)
+      da        [3] = 0
+      da        [4] = 0
+      da        [5] = 0
+      da        [6] = 0
+      da        [7] = 0
+      da        [8] = 0
+      da        [9] = hh
+      da            = 0
+    Feature: zflx1                      (Zero Flux 1)
+    Feature: init1                      (Initial Values 1)
+      c         [1] = 0.01
+      c             = 0.01
+    Feature: dcont1                     (Continuity 1)
+    Feature: flux1                      (Flux/Source 1)
+      g         [1] = 0 * gamma * x * hhx
+      g         [2] = 0*hh^3* Px - hh^3*rho*w^2*x^2
+      g         [3] = 0
+      g             = 0 * gamma * x * hhx
+    Feature: cons1                      (Constraint 1)
+
+STUDIES
+============================================================
+
+  [std1]  Study 1
+    Feature: time                  (Time Dependent)
+      tlist           = range(0,1,100)
+      tunit           = s
+      rtol            = 1e-3

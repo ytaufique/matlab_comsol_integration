@@ -1,0 +1,25 @@
+FUNCTIONS (3 found)
+============================================================
+
+[pw2]  label: Piecewise 2  type: com.comsol.clientapi.impl.FunctionFeatureClient
+  funcname        = ds
+  extrap          = constant
+  smooth          = none
+  pieces          = offset - epsilon, offset + epsilon, A*(0.9375/epsilon-3*0.625*x_prime^2/epsilon^3+5*0.1875*x_prime^4/epsilon^5); 0, offset-epsilon, 0; offset + epsilon, 100e-3, 0
+
+[an1]  label: F  type: com.comsol.clientapi.impl.FunctionFeatureClient
+  funcname        = F
+  expr            = Fo*(1-c/c_max)
+  args            = c
+  args        [1] = c
+
+[an2]  label: eta  type: com.comsol.clientapi.impl.FunctionFeatureClient
+  funcname        = eta
+  expr            = 2[mPa*s] + 1[Pa*s]*c
+  args            = c
+  args        [1] = c
+
+============================================================
+DEPENDENT VARIABLES
+============================================================
+[g] components: hh  P  c  
