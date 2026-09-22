@@ -119,8 +119,8 @@ init.setIndex('u', '0.01', 2);   % c  (matches 1D model)
 % n.Ga_hh = -(hh³/(3*eta)) * ρω² * (x*nx + y*ny)  [centrifugal, no pressure term]
 flx = phys.feature.create('flux1', 'FluxBoundary', 1);
 flx.selection.all;
-flx.setIndex('g', '0',                                                    0);  % P
-flx.setIndex('g', '-(hh^3/(3*eta_safe))*rho*w^2*(x*nx + y*ny)',          1);  % hh
+flx.setIndex('g', '-(hh^3/(3*eta_safe))*rho*w^2*(x*nx + y*ny)',          0);  % hh
+flx.setIndex('g', '0',                                                    1);  % P
 flx.setIndex('g', '0',                                                    2);  % c
 
 %% Mesh
