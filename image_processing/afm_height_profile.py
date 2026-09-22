@@ -95,6 +95,12 @@ def _parse_park_header(header: bytes) -> dict:
 
     result = {}
 
+    width  = _unpack(header, *_PK_NWIDTH)
+    height = _unpack(header, *_PK_NHEIGHT)
+    if width and height and width > 0 and height > 0:
+        result["park_width"]  = width
+        result["park_height"] = height
+
     x_um = _unpack(header, *_PK_X_SCAN_UM)
     y_um = _unpack(header, *_PK_Y_SCAN_UM)
     if x_um and x_um > 0:
@@ -127,8 +133,17 @@ def _parse_park_header(header: bytes) -> dict:
 def _load_park_data(pil_img: Image.Image, meta: dict) -> np.ndarray | None:
     """
     Load calibrated height data from tag 50434.
+
+    The standard TIFF image (pil_img.size) is often just a small embedded
+    preview thumbnail with unrelated dimensions — the real scan resolution
+    is given by the PSIAHeader's nWidth/nHeight fields (tag 50435). Sample
+    width also varies by header version: some export float32 samples
+    already normalised to the gain's units, others raw int16 counts. We
+    pick whichever dtype's expected byte count exactly matches the tag's
+    actual size, rather than guessing and silently truncating.
+
     Returns a 2-D float64 array in the units given by meta['park_unit'],
-    or None if the tag is absent.
+    or None if the tag is absent or its size doesn't match either dtype.
     """
     tags  = getattr(pil_img, "tag_v2", {})
     raw   = tags.get(_TAG_PARK_DATA)
@@ -136,17 +151,21 @@ def _load_park_data(pil_img: Image.Image, meta: dict) -> np.ndarray | None:
         return None
 
     raw_bytes = bytes(raw) if not isinstance(raw, (bytes, bytearray)) else raw
-    n_cols = pil_img.size[0]
-    n_rows = pil_img.size[1]
-    expected = n_cols * n_rows * 2
+    n_cols = meta.get("park_width")  or pil_img.size[0]
+    n_rows = meta.get("park_height") or pil_img.size[1]
+    n_pixels = n_cols * n_rows
 
-    if len(raw_bytes) < expected:
-        return None
-
-    z_raw  = np.frombuffer(raw_bytes[:expected], dtype="<i2").reshape(n_rows, n_cols).astype(np.float64)
     gain   = meta.get("park_gain") or 1.0
     zscale = meta.get("park_zscale") or 1.0
     zoff   = meta.get("park_zoff")   or 0.0
+
+    if len(raw_bytes) == n_pixels * 4:
+        z_raw = np.frombuffer(raw_bytes, dtype="<f4").reshape(n_rows, n_cols).astype(np.float64)
+    elif len(raw_bytes) == n_pixels * 2:
+        z_raw = np.frombuffer(raw_bytes, dtype="<i2").reshape(n_rows, n_cols).astype(np.float64)
+    else:
+        return None
+
     return gain * (zscale * z_raw + zoff)
 
 
@@ -286,20 +305,25 @@ def load_afm_tiff(path: str):
     n_cols, n_rows = img.size
     meta   = read_afm_metadata(img, n_cols, n_rows)
 
-    data = np.array(img, dtype=np.float64)
-    if data.ndim == 3:
-        data = data[:, :, 0]
-
     if meta.get("is_park") and meta.get("park_gain") is not None:
+        park_data = _load_park_data(img, meta)
+        if park_data is not None:
+            return park_data, meta, meta.get("park_unit", "nm")
+
+        # Fallback: tag 50434 (raw PSIAData) is missing, so reconstruct heights
+        # by stretching the display TIFF's pixel range into gain * count range.
+        # Less accurate than the raw counts above, since it assumes the
+        # display image's grayscale span matches [data_min, data_max] exactly.
+        data = np.array(img, dtype=np.float64)
+        if data.ndim == 3:
+            data = data[:, :, 0]
+
         gain     = meta["park_gain"]
         unit     = meta.get("park_unit", "nm")
         raw_min  = meta.get("park_data_min")
         raw_max  = meta.get("park_data_max")
 
         if raw_min is not None and raw_max is not None and raw_min != raw_max:
-            # gain is the physical range per raw int16 count.
-            # The standard TIFF normalises the raw count span to its full pixel range,
-            # so we recover physical heights by stretching pixels into z_range.
             z_range  = abs(gain) * abs(raw_max - raw_min)
             pix_min, pix_max = data.min(), data.max()
             data = z_range * (data - pix_min) / (pix_max - pix_min)
@@ -308,6 +332,9 @@ def load_afm_tiff(path: str):
 
         return data, meta, unit
 
+    data = np.array(img, dtype=np.float64)
+    if data.ndim == 3:
+        data = data[:, :, 0]
     return data, meta, "raw counts"
 
 
@@ -328,6 +355,10 @@ def plot_profile(height_map: np.ndarray, profile: np.ndarray, row: int,
                  image_path: str, x_range_um: float | None,
                  z_unit: str, output_path: str):
     n_pixels = len(profile)
+
+    baseline   = height_map.min()
+    height_map = height_map - baseline
+    profile    = profile - baseline
 
     if x_range_um is not None:
         x       = np.linspace(0, x_range_um, n_pixels)
@@ -392,9 +423,7 @@ def ask(prompt: str) -> str:
     return input(f"{prompt}: ").strip()
 
 
-def main():
-    print("=== AFM Height Profile ===\n")
-
+def analyze_one():
     # Image path
     image_path = ""
     while not image_path:
@@ -446,6 +475,18 @@ def main():
     output_path = os.path.join(OUTPUT_DIR, f"{stem}_profile.png")
 
     plot_profile(height_map, profile, row, image_path, x_range_um, z_unit, output_path)
+
+
+def main():
+    print("=== AFM Height Profile ===\n")
+
+    while True:
+        analyze_one()
+
+        again = ask("\nScan another image? (y/n)").strip().lower()
+        if again not in ("y", "yes"):
+            break
+        print()
 
 
 if __name__ == "__main__":
